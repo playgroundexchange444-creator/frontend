@@ -12,7 +12,6 @@ export const SettingsProvider = ({ children }) => {
             try {
                 const res = await api.get("/settings");
                 if (res.data?.success) {
-                    console.log("Settings loaded:", res.data.settings);
                     setSettings(res.data.settings);
                 } else {
                     console.warn("Settings API returned no data");

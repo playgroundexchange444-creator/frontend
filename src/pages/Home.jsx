@@ -13,31 +13,66 @@ export default function Home() {
     const [selectedMatch, setSelectedMatch] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
-    // ✅ Fetch matches from API
     const fetchMatches = async (sport = "cricket", status = "all") => {
         try {
             setLoading(true);
             let url = `/matches/sport/${sport}`;
             if (status !== "all") url += `?status=${status}`;
+
             const res = await api.get(url);
 
             if (res.data?.success) {
-                if (Array.isArray(res.data.matches)) {
-                    setMatches(res.data.matches);
-                } else if (res.data.grouped) {
-                    const { live = [], upcoming = [], completed = [] } = res.data.grouped;
-                    const allMatches =
-                        status === "live"
-                            ? live
-                            : status === "upcoming"
-                                ? upcoming
-                                : status === "completed"
-                                    ? completed
-                                    : [...live, ...upcoming, ...completed];
-                    setMatches(allMatches);
-                } else {
-                    setMatches([]);
-                }
+                let data = Array.isArray(res.data.matches) ? res.data.matches : [];
+
+                const now = new Date();
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(now.getDate() - 7);
+
+                const thirtyDaysLater = new Date();
+                thirtyDaysLater.setDate(now.getDate() + 30);
+
+                let filtered = data.filter((match) => {
+                    const startTime = new Date(match.startTime);
+
+                    if (filter === "completed") {
+                        return (
+                            match.status === "completed" &&
+                            startTime >= sevenDaysAgo &&
+                            startTime <= now
+                        );
+                    }
+
+                    if (filter === "upcoming") {
+                        return (
+                            startTime > now &&
+                            startTime <= thirtyDaysLater
+                        );
+                    }
+
+                    if (filter === "live") {
+                        return match.status === "live";
+                    }
+
+                    return (
+                        (match.status === "completed" &&
+                            startTime >= sevenDaysAgo &&
+                            startTime <= now) ||
+                        match.status === "live" ||
+                        (startTime > now && startTime <= thirtyDaysLater)
+                    );
+                });
+
+                filtered.sort((a, b) => {
+                    const statusOrder = { live: 0, completed: 1, upcoming: 2 };
+
+                    if (statusOrder[a.status] !== statusOrder[b.status]) {
+                        return statusOrder[a.status] - statusOrder[b.status];
+                    }
+
+                    return new Date(b.startTime) - new Date(a.startTime);
+                });
+
+                setMatches(filtered);
             } else {
                 setMatches([]);
             }
@@ -63,31 +98,28 @@ export default function Home() {
     return (
         <div className="bg-[#0b0d17] min-h-screen text-white">
             <Header />
+
             <div className="flex">
-                {/* Sidebar */}
-                <aside className="w-[250px] bg-[#10131f] border-r border-gray-800 p-4">
+                <aside className="hidden md:block bg-[#10131f] border-r border-gray-800 w-60 p-4 h-full">
                     <h2 className="text-yellow-400 font-semibold text-lg mb-4">Sports</h2>
-                    {["Cricket"].map((sport) => (
-                        <div
-                            key={sport}
-                            onClick={() => setSelectedSport(sport.toLowerCase())}
-                            className={`cursor-pointer mb-2 p-3 rounded-lg border transition ${selectedSport === sport.toLowerCase()
-                                ? "bg-yellow-400 text-black border-yellow-400"
-                                : "bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
-                                }`}
-                        >
-                            {sport}
-                        </div>
-                    ))}
+                    <div
+                        onClick={() => setSelectedSport("cricket")}
+                        className={`cursor-pointer mb-3 p-3 rounded-lg border transition ${selectedSport === "cricket"
+                            ? "bg-yellow-400 text-black border-yellow-400"
+                            : "bg-gray-800 text-white border-gray-700 hover:bg-gray-700"
+                            }`}
+                    >
+                        Cricket
+                    </div>
                 </aside>
 
-                {/* Main Content */}
                 <main className="flex-1 p-6">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-wrap justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-yellow-400 capitalize">
                             {selectedSport} Matches
                         </h2>
-                        <div className="flex gap-3">
+
+                        <div className="hidden md:flex gap-2">
                             {["all", "live", "upcoming", "completed"].map((f) => (
                                 <button
                                     key={f}
@@ -101,6 +133,21 @@ export default function Home() {
                                 </button>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="md:hidden flex gap-2 mb-4">
+                        {["all", "live", "upcoming", "completed"].map((f) => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={`px-3 py-1.5 rounded text-xs ${filter === f
+                                    ? "bg-yellow-400 text-black"
+                                    : "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                                    }`}
+                            >
+                                {f}
+                            </button>
+                        ))}
                     </div>
 
                     {matches.length === 0 ? (
@@ -119,7 +166,6 @@ export default function Home() {
                 </main>
             </div>
 
-            {/* Bet Modal */}
             {showModal && (
                 <BetModal
                     isOpen={showModal}
