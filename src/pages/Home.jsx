@@ -13,12 +13,14 @@ export default function Home() {
     const [selectedMatch, setSelectedMatch] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
+    // ✅ Fetch matches from API
     const fetchMatches = async (sport = "cricket", status = "all") => {
         try {
             setLoading(true);
             let url = `/matches/sport/${sport}`;
             if (status !== "all") url += `?status=${status}`;
             const res = await api.get(url);
+
             if (res.data?.success) {
                 if (Array.isArray(res.data.matches)) {
                     setMatches(res.data.matches);
@@ -62,6 +64,7 @@ export default function Home() {
         <div className="bg-[#0b0d17] min-h-screen text-white">
             <Header />
             <div className="flex">
+                {/* Sidebar */}
                 <aside className="w-[250px] bg-[#10131f] border-r border-gray-800 p-4">
                     <h2 className="text-yellow-400 font-semibold text-lg mb-4">Sports</h2>
                     {["Cricket"].map((sport) => (
@@ -77,6 +80,8 @@ export default function Home() {
                         </div>
                     ))}
                 </aside>
+
+                {/* Main Content */}
                 <main className="flex-1 p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold text-yellow-400 capitalize">
@@ -97,6 +102,7 @@ export default function Home() {
                             ))}
                         </div>
                     </div>
+
                     {matches.length === 0 ? (
                         <p className="text-gray-400 text-center mt-10">
                             No {filter} matches available.
@@ -112,6 +118,8 @@ export default function Home() {
                     )}
                 </main>
             </div>
+
+            {/* Bet Modal */}
             {showModal && (
                 <BetModal
                     isOpen={showModal}

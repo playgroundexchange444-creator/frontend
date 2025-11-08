@@ -55,9 +55,16 @@ export default function Header() {
         <>
             <header className="sticky top-0 z-40 bg-black/95 backdrop-blur text-white border-b border-gray-800">
                 <div className="mx-auto max-w-7xl px-4 md:px-6 h-14 md:h-16 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2">
-                        <span className="bg-yellow-400 text-black px-2.5 py-0.5 rounded font-bold">PGE</span>
-                        <h1 className="font-semibold hidden sm:block">Play Ground Exchange</h1>
+                    {/* ✅ Logo + Title */}
+                    <Link to="/" className="flex items-center gap-3">
+                        <img
+                            src="/logo.png"
+                            alt="Playground Exchange Logo"
+                            className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover shadow-[0_0_15px_rgba(250,204,21,0.5)] border-2 border-yellow-400"
+                        />
+                        <h1 className="font-semibold hidden sm:block text-yellow-400 text-xl md:text-2xl tracking-wide">
+                            Playground Exchange
+                        </h1>
                     </Link>
 
                     <div className="flex items-center gap-2">
